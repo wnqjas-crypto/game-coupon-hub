@@ -150,18 +150,16 @@ const couponListJsonLd = {
             ))}
           </div>
 
-          <div
-            id="empty-active-state"
-            class="empty-state"
-            style={evaluatedGame.activeCoupons.length === 0 ? '' : 'display: none;'}
-          >
-            <div class="empty-icon">📢</div>
-            <h3 class="empty-title">현재 진행 중인 공식 쿠폰이 없습니다</h3>
-            <p class="empty-desc">
-              새로운 공식 쿠폰이 발표되는 즉시 가장 빠르게 업데이트됩니다.<br />
-              이전에 발행된 쿠폰 목록은 아래 만료 쿠폰 섹션을 확인해주세요.
-            </p>
-          </div>
+          {evaluatedGame.activeCoupons.length === 0 && (
+            <div id="empty-active-state" class="empty-state">
+              <div class="empty-icon">📢</div>
+              <h3 class="empty-title">현재 진행 중인 공식 쿠폰이 없습니다</h3>
+              <p class="empty-desc">
+                새로운 공식 쿠폰이 발표되는 즉시 가장 빠르게 업데이트됩니다.<br />
+                이전에 발행된 쿠폰 목록은 아래 만료 쿠폰 섹션을 확인해주세요.
+              </p>
+            </div>
+          )}
         </section>
 
         <!-- Coupon Guide Section -->
@@ -170,11 +168,8 @@ const couponListJsonLd = {
             <h2 id="guide-title" class="section-heading">쿠폰 입력 방법</h2>
             <div class="guide-card">
               <ol class="guide-steps">
-                {evaluatedGame.couponGuide.map((step, idx) => (
-                  <li class="guide-step-item">
-                    <span class="step-num">{idx + 1}</span>
-                    <span class="step-text">{step.replace(/^\d+[\.\s\)]*\s*/, '')}</span>
-                  </li>
+                {evaluatedGame.couponGuide.map((step) => (
+                  <li class="guide-step-item">{step.replace(/^\d+[\.\s\)]*\s*/, '')}</li>
                 ))}
               </ol>
             </div>
@@ -359,8 +354,21 @@ const couponListJsonLd = {
             }
           }
 
-          if (emptyState) {
-            emptyState.style.display = activeTotal === 0 ? 'block' : 'none';
+          let emptyState = document.getElementById('empty-active-state');
+
+          if (activeTotal === 0) {
+            if (!emptyState) {
+              emptyState = document.createElement('div');
+              emptyState.id = 'empty-active-state';
+              emptyState.className = 'empty-state';
+              emptyState.innerHTML = '<div class="empty-icon">📢</div><h3 class="empty-title">현재 진행 중인 공식 쿠폰이 없습니다</h3><p class="empty-desc">새로운 공식 쿠폰이 발표되는 즉시 가장 빠르게 업데이트됩니다.<br />이전에 발행된 쿠폰 목록은 아래 만료 쿠폰 섹션을 확인해주세요.</p>';
+              activeContainer.parentNode.insertBefore(emptyState, activeContainer.nextSibling);
+            }
+            emptyState.style.display = 'block';
+          } else {
+            if (emptyState) {
+              emptyState.remove();
+            }
           }
         }
 
@@ -544,46 +552,20 @@ const couponListJsonLd = {
   }
 
   .guide-steps {
-    list-style: none !important;
-    list-style-type: none !important;
+    padding-left: 20px;
+    margin: 0;
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
 
   .guide-step-item {
-    list-style: none !important;
-    list-style-type: none !important;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .guide-step-item::marker {
-    display: none;
-    content: "";
-  }
-
-  .step-num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 9999px;
-    background-color: var(--primary-light);
-    color: var(--primary);
-    font-size: 0.75rem;
-    font-weight: 700;
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-
-  .step-text {
     font-size: 0.875rem;
-    line-height: 1.5;
+    line-height: 1.6;
     color: var(--text-secondary);
   }
+
+
 
   .expired-section {
     margin-top: 24px;
