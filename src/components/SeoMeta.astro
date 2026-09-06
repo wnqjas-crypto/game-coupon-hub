@@ -1,0 +1,43 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  path?: string;
+  jsonLd?: Record<string, any> | Array<Record<string, any>>;
+}
+
+const { title, description, path = '', jsonLd } = Astro.props;
+
+const rawSiteUrl = import.meta.env.PUBLIC_SITE_URL || process.env.PUBLIC_SITE_URL || '';
+const siteUrl = rawSiteUrl.trim().replace(/\/$/, '');
+const hasValidSiteUrl = siteUrl.startsWith('http://') || siteUrl.startsWith('https://');
+
+const canonicalUrl = hasValidSiteUrl ? `${siteUrl}${path}` : null;
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="utf-8" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+<!-- Canonical URL (rendered strictly only when PUBLIC_SITE_URL is valid) -->
+{canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+{canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
+<meta property="og:locale" content="ko_KR" />
+<meta property="og:site_name" content="게임 쿠폰 허브" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+
+<!-- Structured Data (JSON-LD) -->
+{jsonLd && (
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+)}

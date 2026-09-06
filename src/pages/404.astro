@@ -1,0 +1,102 @@
+---
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SeoMeta from '../components/SeoMeta.astro';
+import '../styles/global.css';
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <SeoMeta
+      title="페이지를 찾을 수 없습니다 | 게임 쿠폰 허브"
+      description="요청하신 페이지가 존재하지 않거나 이동되었습니다."
+      path="/404"
+    />
+  </head>
+  <body>
+    <Header />
+
+    <main class="main-content">
+      <div class="container not-found-container">
+        <div class="not-found-card">
+          <span class="error-code">404</span>
+          <h1 class="error-title">찾으시는 페이지가 없습니다</h1>
+          <p class="error-desc">
+            주소가 잘못 입력되었거나, 등록되지 않은 게임 페이지일 수 있습니다.
+          </p>
+          <a href="/" class="btn-home">
+            홈으로 돌아가기 &rarr;
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <Footer />
+  </body>
+</html>
+
+<style>
+  .main-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 48px 0;
+  }
+
+  .not-found-container {
+    display: flex;
+    justify-content: center;
+  }
+
+  .not-found-card {
+    text-align: center;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 40px 24px;
+    box-shadow: var(--shadow-sm);
+    max-width: 440px;
+    width: 100%;
+  }
+
+  .error-code {
+    display: inline-block;
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .error-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .error-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .btn-home {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary);
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.15s ease;
+  }
+
+  .btn-home:hover {
+    background-color: var(--primary-hover);
+  }
+</style>

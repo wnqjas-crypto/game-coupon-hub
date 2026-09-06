@@ -1,0 +1,627 @@
+---
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import CouponCard from '../../components/CouponCard.astro';
+import SeoMeta from '../../components/SeoMeta.astro';
+import { getAllGames, evaluateGame } from '../../utils/games.js';
+import { getKSTDateParts } from '../../utils/date.js';
+import type { GameData } from '../../types/game.js';
+import '../../styles/global.css';
+
+export async function getStaticPaths() {
+  const games = getAllGames();
+  return games.map((game) => ({
+    params: { slug: game.slug },
+    props: { rawGame: game },
+  }));
+}
+
+interface Props {
+  rawGame: GameData;
+}
+
+const { rawGame } = Astro.props;
+const evaluatedGame = evaluateGame(rawGame);
+
+const nowParts = getKSTDateParts(new Date());
+const year = nowParts.year;
+const month = nowParts.month;
+
+const seoTitle = `${evaluatedGame.name} 쿠폰 ${year}년 ${month}월 최신 | 게임 쿠폰 허브`;
+const seoDescription = `${evaluatedGame.name}에서 현재 사용 가능한 최신 쿠폰 코드, 보상, 만료일과 입력 방법을 확인하세요.`;
+
+// JSON-LD: WebPage, BreadcrumbList, ItemList
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: '홈',
+      item: '/',
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: `${evaluatedGame.name} 쿠폰`,
+      item: `/games/${evaluatedGame.slug}`,
+    },
+  ],
+};
+
+const webpageJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: seoTitle,
+  description: seoDescription,
+  inLanguage: 'ko-KR',
+};
+
+const couponListJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: `${evaluatedGame.name} 최신 쿠폰 목록`,
+  itemListElement: evaluatedGame.activeCoupons.map((c, idx) => ({
+    '@type': 'ListItem',
+    position: idx + 1,
+    name: `${c.code} - ${c.reward}`,
+  })),
+};
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <SeoMeta
+      title={seoTitle}
+      description={seoDescription}
+      path={`/games/${evaluatedGame.slug}`}
+      jsonLd={[webpageJsonLd, breadcrumbJsonLd, couponListJsonLd]}
+    />
+  </head>
+  <body>
+    <Header />
+
+    <main class="main-content">
+      <div class="container">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb-nav" aria-label="경로 탐색">
+          <ol class="breadcrumb-list">
+            <li><a href="/">홈</a></li>
+            <li aria-hidden="true">/</li>
+            <li aria-current="page">{evaluatedGame.name}</li>
+          </ol>
+        </nav>
+
+        <!-- Game Header Section -->
+        <header class="game-header">
+          <div class="game-header-top">
+            <div class="game-icon-wrap">
+              <img
+                src={evaluatedGame.icon}
+                alt={`${evaluatedGame.name} 아이콘`}
+                width="80"
+                height="80"
+                class="game-icon"
+              />
+            </div>
+            <div class="game-meta-info">
+              <h1 class="game-title">{evaluatedGame.name}</h1>
+              <p class="game-official-name">{evaluatedGame.officialName}</p>
+              <div class="badges-row">
+                <span
+                  class={`badge ${evaluatedGame.activeCount > 0 ? 'badge-active' : 'badge-expired'}`}
+                  id="header-active-badge"
+                >
+                  {evaluatedGame.activeCount > 0 ? `사용 가능 ${evaluatedGame.activeCount}개` : '진행중 쿠폰 없음'}
+                </span>
+                <span class="badge badge-neutral">마지막 확인: {evaluatedGame.lastUpdated}</span>
+              </div>
+            </div>
+          </div>
+
+          {evaluatedGame.officialUrl && (
+            <div class="official-links-bar">
+              <a
+                href={evaluatedGame.officialUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-official"
+              >
+                공식 웹사이트 바로가기 ↗
+              </a>
+            </div>
+          )}
+        </header>
+
+        <!-- Active Coupons Section -->
+        <section class="coupons-section" aria-labelledby="active-coupons-title">
+          <div class="section-title-wrap">
+            <h2 id="active-coupons-title" class="section-heading">
+              사용 가능한 쿠폰 (<span id="active-count-num">{evaluatedGame.activeCount}</span>)
+            </h2>
+            <span class="section-tip">코드를 누르면 복사됩니다</span>
+          </div>
+
+          <div class="coupons-grid" id="active-coupons-container">
+            {evaluatedGame.activeCoupons.map((coupon) => (
+              <CouponCard coupon={coupon} />
+            ))}
+          </div>
+
+          <div
+            id="empty-active-state"
+            class="empty-state"
+            style={evaluatedGame.activeCoupons.length === 0 ? '' : 'display: none;'}
+          >
+            <div class="empty-icon">📢</div>
+            <h3 class="empty-title">현재 진행 중인 공식 쿠폰이 없습니다</h3>
+            <p class="empty-desc">
+              새로운 공식 쿠폰이 발표되는 즉시 가장 빠르게 업데이트됩니다.<br />
+              이전에 발행된 쿠폰 목록은 아래 만료 쿠폰 섹션을 확인해주세요.
+            </p>
+          </div>
+        </section>
+
+        <!-- Coupon Guide Section -->
+        {evaluatedGame.couponGuide && evaluatedGame.couponGuide.length > 0 && (
+          <section class="guide-section" aria-labelledby="guide-title">
+            <h2 id="guide-title" class="section-heading">쿠폰 입력 방법</h2>
+            <div class="guide-card">
+              <ol class="guide-steps">
+                {evaluatedGame.couponGuide.map((step, idx) => (
+                  <li class="guide-step-item">
+                    <span class="step-num">{idx + 1}</span>
+                    <span class="step-text">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+        )}
+
+        <!-- Expired Coupons Section -->
+        <section class="expired-section" aria-labelledby="expired-coupons-title">
+          <details class="expired-details" open={evaluatedGame.activeCoupons.length === 0}>
+            <summary class="expired-summary">
+              <span class="expired-summary-title">
+                만료된 쿠폰 (<span id="expired-count-num">{evaluatedGame.expiredCoupons.length}</span>)
+              </span>
+              <span class="summary-toggle-text">펼치기/접기</span>
+            </summary>
+            <div class="coupons-grid expired-list" id="expired-coupons-container">
+              {evaluatedGame.expiredCoupons.map((coupon) => (
+                <CouponCard coupon={coupon} isExpired={true} />
+              ))}
+            </div>
+          </details>
+        </section>
+      </div>
+    </main>
+
+    <Footer />
+
+    <!-- Client-side real-time KST recalculation & Clipboard copy script -->
+    <script is:inline>
+      (function() {
+        // 1. Copy to clipboard with 1.5s visual feedback
+        document.addEventListener('click', function(e) {
+          const btn = e.target.closest('[data-copy-btn]');
+          if (!btn) return;
+
+          const code = btn.getAttribute('data-code');
+          if (!code) return;
+
+          const originalContent = btn.innerHTML;
+          
+          function showCopied() {
+            btn.classList.add('copied');
+            btn.innerHTML = '<span class="btn-text">복사됨 ✓</span>';
+            setTimeout(function() {
+              btn.innerHTML = originalContent;
+              btn.classList.remove('copied');
+            }, 1500);
+          }
+
+          if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(code).then(showCopied).catch(function() {
+              fallbackCopy(code, showCopied);
+            });
+          } else {
+            fallbackCopy(code, showCopied);
+          }
+        });
+
+        function fallbackCopy(text, onSuccess) {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand('copy');
+            onSuccess();
+          } catch (err) {
+            console.error('Copy fallback failed', err);
+          }
+          document.body.removeChild(textarea);
+        }
+
+        // 2. Real-time KST evaluation on page load (prevents stale SSG D-Day / expiration status)
+        function reclassifyCoupons() {
+          const activeContainer = document.getElementById('active-coupons-container');
+          const expiredContainer = document.getElementById('expired-coupons-container');
+          const emptyState = document.getElementById('empty-active-state');
+          const activeCountNum = document.getElementById('active-count-num');
+          const expiredCountNum = document.getElementById('expired-count-num');
+          const headerBadge = document.getElementById('header-active-badge');
+
+          if (!activeContainer || !expiredContainer) return;
+
+          const cards = document.querySelectorAll('[data-coupon-card]');
+          const now = new Date();
+
+          // Get current KST parts
+          const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Seoul',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: false,
+          });
+
+          const parts = formatter.formatToParts(now);
+          const map = {};
+          parts.forEach(function(p) {
+            if (p.type !== 'literal') map[p.type] = parseInt(p.value, 10);
+          });
+          const currentKSTMidnight = Date.UTC(map.year, map.month - 1, map.day);
+          const nowMs = now.getTime();
+
+          let activeTotal = 0;
+          let expiredTotal = 0;
+
+          cards.forEach(function(card) {
+            const expiresAt = card.getAttribute('data-expires-at');
+            const badge = card.querySelector('[data-badge]');
+
+            if (!expiresAt) {
+              activeTotal++;
+              return;
+            }
+
+            const expiryDate = new Date(expiresAt);
+            if (isNaN(expiryDate.getTime())) {
+              activeTotal++;
+              return;
+            }
+
+            const expParts = formatter.formatToParts(expiryDate);
+            const expMap = {};
+            expParts.forEach(function(p) {
+              if (p.type !== 'literal') expMap[p.type] = parseInt(p.value, 10);
+            });
+            const expKSTMidnight = Date.UTC(expMap.year, expMap.month - 1, expMap.day);
+            const expiryMs = expiryDate.getTime();
+
+            const isExpired = expiryMs <= nowMs;
+            const diffDays = Math.round((expKSTMidnight - currentKSTMidnight) / (24 * 60 * 60 * 1000));
+
+            if (isExpired) {
+              expiredTotal++;
+              card.classList.add('is-expired');
+              card.setAttribute('data-status', 'expired');
+              if (badge) {
+                badge.textContent = '만료';
+                badge.className = 'badge badge-expired';
+              }
+              if (card.parentElement !== expiredContainer) {
+                expiredContainer.prepend(card);
+              }
+            } else {
+              activeTotal++;
+              card.classList.remove('is-expired');
+              if (diffDays <= 0) {
+                card.setAttribute('data-status', 'expiring_today');
+                if (badge) {
+                  badge.textContent = '오늘 만료';
+                  badge.className = 'badge badge-warning';
+                }
+              } else {
+                card.setAttribute('data-status', 'active');
+                if (badge) {
+                  badge.textContent = diffDays === 1 ? 'D-1' : 'D-' + diffDays;
+                  badge.className = 'badge badge-active';
+                }
+              }
+              if (card.parentElement !== activeContainer) {
+                activeContainer.appendChild(card);
+              }
+            }
+          });
+
+          // Update counts
+          if (activeCountNum) activeCountNum.textContent = activeTotal;
+          if (expiredCountNum) expiredCountNum.textContent = expiredTotal;
+
+          if (headerBadge) {
+            if (activeTotal > 0) {
+              headerBadge.textContent = '사용 가능 ' + activeTotal + '개';
+              headerBadge.className = 'badge badge-active';
+            } else {
+              headerBadge.textContent = '진행중 쿠폰 없음';
+              headerBadge.className = 'badge badge-expired';
+            }
+          }
+
+          if (emptyState) {
+            emptyState.style.display = activeTotal === 0 ? 'block' : 'none';
+          }
+        }
+
+        reclassifyCoupons();
+      })();
+    </script>
+  </body>
+</html>
+
+<style>
+  .main-content {
+    flex: 1;
+    padding: 16px 0 40px 0;
+  }
+
+  .breadcrumb-nav {
+    margin-bottom: 16px;
+  }
+
+  .breadcrumb-list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  .breadcrumb-list a {
+    color: var(--primary);
+  }
+
+  .breadcrumb-list a:hover {
+    text-decoration: underline;
+  }
+
+  .game-header {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-card);
+    margin-bottom: 24px;
+  }
+
+  .game-header-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .game-icon-wrap {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background-color: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    flex-shrink: 0;
+  }
+
+  .game-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .game-meta-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .game-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  .game-official-name {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  .badges-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .official-links-bar {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .btn-official {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .btn-official:hover {
+    text-decoration: underline;
+  }
+
+  .coupons-section {
+    margin-bottom: 28px;
+  }
+
+  .section-title-wrap {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .section-heading {
+    font-size: 1.1875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .section-tip {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .coupons-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 36px 20px;
+    background-color: var(--bg-card);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+  }
+
+  .empty-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+  }
+
+  .empty-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .empty-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .guide-section {
+    margin-bottom: 28px;
+  }
+
+  .guide-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    margin-top: 12px;
+  }
+
+  .guide-steps {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .guide-step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 9999px;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .step-text {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  .expired-section {
+    margin-top: 24px;
+  }
+
+  .expired-details {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .expired-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    cursor: pointer;
+    font-weight: 600;
+    background-color: #F8FAFC;
+    user-select: none;
+  }
+
+  .expired-summary-title {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+  }
+
+  .summary-toggle-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .expired-list {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background-color: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+  }
+
+  @media (max-width: 480px) {
+    .game-header-top {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

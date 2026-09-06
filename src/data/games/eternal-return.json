@@ -1,0 +1,48 @@
+{
+  "slug": "eternal-return",
+  "name": "이터널 리턴",
+  "officialName": "Eternal Return",
+  "icon": "/games/eternal-return.svg",
+  "officialUrl": "https://playeternalreturn.com",
+  "couponGuide": [
+    "게임 접속 후 로비 화면 우측 상단 [설정(톱니바퀴 아이콘)]을 클릭합니다.",
+    "설정 창 상단 메뉴 중 [서비스] 탭을 클릭합니다.",
+    "서비스 탭 내 [쿠폰 입력] 버튼을 클릭하고 코드를 입력합니다.",
+    "확인 후 게임 내 우편함에서 보상을 수령합니다. (계정당 1회 사용 가능)"
+  ],
+  "lastUpdated": "2026-09-06",
+  "coupons": [
+    {
+      "code": "ERBW2026",
+      "reward": "300 이벤트 NP + 스킨 데이터 세트",
+      "issuedAt": "2026-07-12",
+      "expiresAt": "2026-08-06T11:00:00+09:00",
+      "sourceUrl": "https://playeternalreturn.com",
+      "notes": "Bilibili World 2026 기념 공식 쿠폰"
+    },
+    {
+      "code": "THX3RDANNIVERSARY",
+      "reward": "300 이벤트 NP (7일) + 연구소 선물 상자",
+      "issuedAt": "2026-07-20",
+      "expiresAt": "2026-08-06T09:00:00+09:00",
+      "sourceUrl": "https://playeternalreturn.com",
+      "notes": "정식 출시 3주년 기념 공식 쿠폰"
+    },
+    {
+      "code": "2026ERSUMMER",
+      "reward": "200 이벤트 NP (7일)",
+      "issuedAt": "2026-05-20",
+      "expiresAt": "2026-06-11T23:59:59+09:00",
+      "sourceUrl": "https://playeternalreturn.com",
+      "notes": "Hello, Summer! 특별 쿠폰"
+    },
+    {
+      "code": "SEASON11PTMG",
+      "reward": "200 이벤트 NP + 쁘띠 미뇽 이모티콘",
+      "issuedAt": "2026-05-10",
+      "expiresAt": "2026-05-26T09:00:00+09:00",
+      "sourceUrl": "https://playeternalreturn.com",
+      "notes": "시즌 11 시작 기념 쿠폰"
+    }
+  ]
+}

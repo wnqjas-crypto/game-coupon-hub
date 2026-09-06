@@ -1,0 +1,298 @@
+---
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import GameCard from '../components/GameCard.astro';
+import SeoMeta from '../components/SeoMeta.astro';
+import { getAllEvaluatedGames } from '../utils/games.js';
+import '../styles/global.css';
+
+const games = getAllEvaluatedGames();
+
+const totalActiveCoupons = games.reduce((acc, g) => acc + g.activeCount, 0);
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: '게임 쿠폰 허브',
+  description: '최신 게임 쿠폰 코드, 보상, 만료일을 빠르고 정확하게 확인하고 5초 안에 복사하는 정적 웹 서비스',
+  inLanguage: 'ko-KR',
+};
+
+const itemListJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  itemListElement: games.map((game, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: game.name,
+    url: `/games/${game.slug}`,
+  })),
+};
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <SeoMeta
+      title="게임 쿠폰 허브 | 최신 게임 쿠폰 5초 빠른 복사"
+      description="이터널 리턴 등 주요 게임의 현재 사용 가능한 최신 쿠폰 코드, 보상, 만료일, D-Day를 확인하고 원클릭으로 복사하세요."
+      path="/"
+      jsonLd={[websiteJsonLd, itemListJsonLd]}
+    />
+  </head>
+  <body>
+    <Header />
+
+    <main class="main-content">
+      <div class="container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+          <div class="hero-badge">초경량 정적 쿠폰 허브</div>
+          <h1 class="hero-title">최신 게임 쿠폰을 5초 안에</h1>
+          <p class="hero-desc">
+            로그인 없이 바로 확인하고 복사하세요. 공식 공지 기반으로 검증된 쿠폰만 제공합니다.
+          </p>
+        </section>
+
+        <!-- Search Bar -->
+        <section class="search-section" aria-label="게임 검색">
+          <div class="search-box">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              id="game-search-input"
+              class="search-input"
+              placeholder="게임 이름으로 검색 (예: 이터널 리턴, Eternal Return)"
+              autocomplete="off"
+              aria-label="게임 검색어 입력"
+            />
+            <button
+              type="button"
+              id="clear-search-btn"
+              class="clear-btn"
+              style="display: none;"
+              aria-label="검색어 지우기"
+            >
+              ✕
+            </button>
+          </div>
+        </section>
+
+        <!-- Game List Section -->
+        <section class="games-section" aria-label="게임 목록">
+          <div class="section-header">
+            <h2 class="section-title">지원 게임 목록</h2>
+            <span class="game-count-label">총 <strong id="visible-game-count">{games.length}</strong>개 게임</span>
+          </div>
+
+          <div class="games-list" id="games-list">
+            {games.map((game) => (
+              <GameCard game={game} />
+            ))}
+          </div>
+
+          <div id="no-results" class="no-results" style="display: none;">
+            <p>검색 결과가 없습니다.</p>
+            <span class="no-results-sub">게임명을 다시 확인해주세요.</span>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <Footer />
+
+    <script is:inline>
+      // Fast, lightweight client-side search
+      (function() {
+        const searchInput = document.getElementById('game-search-input');
+        const clearBtn = document.getElementById('clear-search-btn');
+        const cards = document.querySelectorAll('[data-game-card]');
+        const noResults = document.getElementById('no-results');
+        const countLabel = document.getElementById('visible-game-count');
+
+        if (!searchInput) return;
+
+        function filterGames() {
+          const query = searchInput.value.trim().toLowerCase();
+          let visibleCount = 0;
+
+          if (clearBtn) {
+            clearBtn.style.display = query ? 'block' : 'none';
+          }
+
+          cards.forEach((card) => {
+            const name = card.getAttribute('data-game-name') || '';
+            const officialName = card.getAttribute('data-official-name') || '';
+            const slug = card.getAttribute('data-slug') || '';
+
+            const isMatch = !query || name.includes(query) || officialName.includes(query) || slug.includes(query);
+
+            if (isMatch) {
+              card.style.display = '';
+              visibleCount++;
+            } else {
+              card.style.display = 'none';
+            }
+          });
+
+          if (countLabel) {
+            countLabel.textContent = visibleCount;
+          }
+
+          if (noResults) {
+            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+          }
+        }
+
+        searchInput.addEventListener('input', filterGames);
+
+        if (clearBtn) {
+          clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            searchInput.focus();
+            filterGames();
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
+
+<style>
+  .main-content {
+    flex: 1;
+    padding: 24px 0 40px 0;
+  }
+
+  .hero-section {
+    text-align: center;
+    padding: 16px 0 24px 0;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    background-color: var(--primary-light);
+    border: 1px solid #BFDBFE;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    margin-bottom: 12px;
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+
+  .hero-desc {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+  }
+
+  .search-section {
+    margin-bottom: 24px;
+  }
+
+  .search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 0 14px;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .search-box:focus-within {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  }
+
+  .search-icon {
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-right: 10px;
+  }
+
+  .search-input {
+    width: 100%;
+    min-height: 48px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.9375rem;
+    font-family: inherit;
+    color: var(--text-primary);
+  }
+
+  .search-input::placeholder {
+    color: #94A3B8;
+  }
+
+  .clear-btn {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    padding: 6px 8px;
+    border-radius: 9999px;
+    min-height: 36px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .game-count-label {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  .games-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 40px 16px;
+    background-color: var(--bg-card);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    color: var(--text-secondary);
+  }
+
+  .no-results p {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .no-results-sub {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+</style>

@@ -1,0 +1,22 @@
+{
+  "slug": "sample-fixture",
+  "name": "테스트 샘플 게임 (Fixture)",
+  "officialName": "Sample Fixture Game",
+  "icon": "/games/sample.svg",
+  "officialUrl": "https://example.com",
+  "couponGuide": [
+    "테스트용 가이드 1단계",
+    "테스트용 가이드 2단계"
+  ],
+  "lastUpdated": "2026-09-06",
+  "coupons": [
+    {
+      "code": "TESTSAMPLE100",
+      "reward": "테스트 다이아 100개",
+      "issuedAt": "2026-09-01",
+      "expiresAt": "2099-12-31T23:59:59+09:00",
+      "sourceUrl": "https://example.com/coupon",
+      "notes": "테스트용 활성 쿠폰 fixture"
+    }
+  ]
+}

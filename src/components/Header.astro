@@ -1,0 +1,75 @@
+---
+---
+<header class="site-header">
+  <div class="container header-content">
+    <a href="/" class="brand" aria-label="게임 쿠폰 허브 홈으로 이동">
+      <div class="brand-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 8v13H3V8"></path>
+          <path d="M1 3h22v5H1z"></path>
+          <path d="M10 12h4"></path>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">게임 쿠폰 허브</span>
+        <span class="brand-subtitle">최신 게임 쿠폰 빠른 복사</span>
+      </div>
+    </a>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding: 12px 0;
+  }
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text-primary);
+  }
+
+  .brand-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+  }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .brand-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+
+  .brand-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+</style>

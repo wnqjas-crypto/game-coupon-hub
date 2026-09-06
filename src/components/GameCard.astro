@@ -1,0 +1,129 @@
+---
+import type { EvaluatedGameData } from '../types/game.js';
+
+interface Props {
+  game: EvaluatedGameData;
+}
+
+const { game } = Astro.props;
+---
+
+<article
+  class="game-card"
+  data-game-card
+  data-game-name={game.name.toLowerCase()}
+  data-official-name={game.officialName.toLowerCase()}
+  data-slug={game.slug}
+>
+  <a href={`/games/${game.slug}`} class="game-card-link" aria-label={`${game.name} 쿠폰 목록 보기`}>
+    <div class="game-icon-wrap">
+      <img
+        src={game.icon}
+        alt={`${game.name} 아이콘`}
+        width="64"
+        height="64"
+        loading="lazy"
+        class="game-icon"
+      />
+    </div>
+
+    <div class="game-info">
+      <div class="title-row">
+        <h2 class="game-name">{game.name}</h2>
+        <span class={`badge ${game.activeCount > 0 ? 'badge-active' : 'badge-expired'}`} data-active-badge>
+          {game.activeCount > 0 ? `사용 가능 ${game.activeCount}개` : '진행중 쿠폰 없음'}
+        </span>
+      </div>
+      <p class="official-name">{game.officialName}</p>
+
+      <div class="meta-row">
+        <span class="update-date">업데이트: {game.lastUpdated}</span>
+        <span class="view-details">쿠폰 보기 &rarr;</span>
+      </div>
+    </div>
+  </a>
+</article>
+
+<style>
+  .game-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .game-card:hover {
+    border-color: #93C5FD;
+    box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+    transform: translateY(-1px);
+  }
+
+  .game-card-link {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .game-icon-wrap {
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background-color: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+  }
+
+  .game-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .game-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .game-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .official-name {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  .meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .view-details {
+    color: var(--primary);
+    font-weight: 600;
+  }
+</style>

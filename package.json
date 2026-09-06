@@ -1,0 +1,22 @@
+{
+  "name": "game-coupon-hub",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "최신 게임 쿠폰을 5초 안에 확인하고 복사하는 초경량 정적 웹사이트",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "tsx --test tests/**/*.test.ts"
+  },
+  "dependencies": {
+    "astro": "^7.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
