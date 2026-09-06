@@ -54,3 +54,19 @@ test('evaluateCouponDate: expiring in 4 days (D-4)', () => {
   assert.equal(result.dDayLabel, 'D-4');
   assert.equal(result.formattedExpiresAt, '2026.09.10 23:59');
 });
+
+test('evaluateCouponDate: ISO 8601 +09:00 timestamp does not apply double offset', () => {
+  // 11:00 KST with explicit +09:00 offset
+  const kstCoupon = '2026-08-06T11:00:00+09:00';
+  const ref = new Date('2026-08-01T00:00:00Z');
+  const result = evaluateCouponDate(kstCoupon, ref);
+
+  // If double offset was erroneously added, hour would be 20:00 instead of 11:00
+  assert.equal(result.formattedExpiresAt, '2026.08.06 11:00');
+
+  // UTC equivalent (02:00 UTC = 11:00 KST) must yield identical output
+  const utcCoupon = '2026-08-06T02:00:00Z';
+  const utcResult = evaluateCouponDate(utcCoupon, ref);
+  assert.equal(utcResult.formattedExpiresAt, '2026.08.06 11:00');
+  assert.equal(result.formattedExpiresAt, utcResult.formattedExpiresAt);
+});

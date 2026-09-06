@@ -8,8 +8,6 @@ import '../styles/global.css';
 
 const games = getAllEvaluatedGames();
 
-const totalActiveCoupons = games.reduce((acc, g) => acc + g.activeCount, 0);
-
 const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
@@ -105,11 +103,53 @@ const itemListJsonLd = {
     <Footer />
 
     <script is:inline>
-      // Fast, lightweight client-side search
       (function() {
+        const cards = document.querySelectorAll('[data-game-card]');
+
+        // 1. Real-time KST recalculation for game active coupon count (prevents stale home counters)
+        function reclassifyHomeGameCards() {
+          const now = Date.now();
+
+          cards.forEach(function(card) {
+            const rawExpiries = card.getAttribute('data-coupon-expiries');
+            if (!rawExpiries) return;
+
+            try {
+              const expiries = JSON.parse(rawExpiries);
+              let activeCount = 0;
+
+              expiries.forEach(function(exp) {
+                if (!exp) {
+                  activeCount++;
+                  return;
+                }
+                const expiryTime = new Date(exp).getTime();
+                if (!isNaN(expiryTime) && expiryTime > now) {
+                  activeCount++;
+                }
+              });
+
+              const badge = card.querySelector('[data-active-badge]');
+              if (badge) {
+                if (activeCount > 0) {
+                  badge.textContent = '사용 가능 ' + activeCount + '개';
+                  badge.className = 'badge badge-active';
+                } else {
+                  badge.textContent = '진행중 쿠폰 없음';
+                  badge.className = 'badge badge-expired';
+                }
+              }
+            } catch (err) {
+              console.error('Error reclassifying game card:', err);
+            }
+          });
+        }
+
+        reclassifyHomeGameCards();
+
+        // 2. Fast, lightweight client-side search
         const searchInput = document.getElementById('game-search-input');
         const clearBtn = document.getElementById('clear-search-btn');
-        const cards = document.querySelectorAll('[data-game-card]');
         const noResults = document.getElementById('no-results');
         const countLabel = document.getElementById('visible-game-count');
 
@@ -123,7 +163,7 @@ const itemListJsonLd = {
             clearBtn.style.display = query ? 'block' : 'none';
           }
 
-          cards.forEach((card) => {
+          cards.forEach(function(card) {
             const name = card.getAttribute('data-game-name') || '';
             const officialName = card.getAttribute('data-official-name') || '';
             const slug = card.getAttribute('data-slug') || '';

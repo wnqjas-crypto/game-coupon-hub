@@ -6,6 +6,7 @@ interface Props {
 }
 
 const { game } = Astro.props;
+const couponExpiries = [...game.activeCoupons, ...game.expiredCoupons].map((c) => c.expiresAt);
 ---
 
 <article
@@ -14,6 +15,7 @@ const { game } = Astro.props;
   data-game-name={game.name.toLowerCase()}
   data-official-name={game.officialName.toLowerCase()}
   data-slug={game.slug}
+  data-coupon-expiries={JSON.stringify(couponExpiries)}
 >
   <a href={`/games/${game.slug}`} class="game-card-link" aria-label={`${game.name} 쿠폰 목록 보기`}>
     <div class="game-icon-wrap">
