@@ -173,7 +173,7 @@ const couponListJsonLd = {
                 {evaluatedGame.couponGuide.map((step, idx) => (
                   <li class="guide-step-item">
                     <span class="step-num">{idx + 1}</span>
-                    <span class="step-text">{step}</span>
+                    <span class="step-text">{step.replace(/^\d+[\.\s\)]*\s*/, '')}</span>
                   </li>
                 ))}
               </ol>
@@ -544,16 +544,24 @@ const couponListJsonLd = {
   }
 
   .guide-steps {
-    list-style: none;
+    list-style: none !important;
+    list-style-type: none !important;
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
 
   .guide-step-item {
+    list-style: none !important;
+    list-style-type: none !important;
     display: flex;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .guide-step-item::marker {
+    display: none;
+    content: "";
   }
 
   .step-num {

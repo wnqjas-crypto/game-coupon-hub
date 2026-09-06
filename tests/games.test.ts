@@ -25,9 +25,10 @@ test('evaluateGame: properly partitions active and expired coupons', () => {
   const er = getGameBySlug('eternal-return');
   assert.ok(er);
   
-  // Current time: 2026-09-06
-  const evaluated = evaluateGame(er, new Date('2026-09-06T12:00:00+09:00'));
-  assert.equal(evaluated.activeCount, 0);
-  assert.equal(evaluated.activeCoupons.length, 0);
+  // Current time: 2026-09-07
+  const evaluated = evaluateGame(er, new Date('2026-09-07T12:00:00+09:00'));
+  assert.equal(evaluated.activeCount, 1);
+  assert.equal(evaluated.activeCoupons.length, 1);
+  assert.equal(evaluated.activeCoupons[0].code, 'GOS12SAILING');
   assert.equal(evaluated.expiredCoupons.length, 4);
 });

@@ -10,8 +10,16 @@
     "서비스 탭 내 [쿠폰 입력] 버튼을 클릭하고 코드를 입력합니다.",
     "확인 후 게임 내 우편함에서 보상을 수령합니다. (계정당 1회 사용 가능)"
   ],
-  "lastUpdated": "2026-09-06",
+  "lastUpdated": "2026-09-07",
   "coupons": [
+    {
+      "code": "GOS12SAILING",
+      "reward": "High Light (feat. NAYUBI) OST, High Light (Inst.) OST, 200 이벤트 NP (7일), XP 부스트 7일, A-Coin 부스트 7일, 일반 시즌 조각팩 5개 (즉시 개봉)",
+      "issuedAt": "2026-09-01",
+      "expiresAt": "2026-09-10T09:00:00+09:00",
+      "sourceUrl": "https://playeternalreturn.com/posts/news/3820?hl=ko-KR",
+      "notes": "시즌 12 세일링 스타트 쿠폰"
+    },
     {
       "code": "ERBW2026",
       "reward": "300 이벤트 NP + 스킨 데이터 세트",
