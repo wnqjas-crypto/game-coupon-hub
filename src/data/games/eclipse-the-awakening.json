@@ -1,0 +1,22 @@
+{
+  "slug": "eclipse-the-awakening",
+  "name": "이클립스: 더 어웨이크닝",
+  "officialName": "Eclipse: The Awakening",
+  "icon": "/games/eclipse-the-awakening.svg",
+  "officialUrl": "https://eclipse.onstove.com",
+  "couponGuide": [
+    "공식 쿠폰 입력 방법이 확인되면 업데이트 예정입니다. (2026년 9월 10일 12:00 정식 론칭)",
+    "공식 카카오톡 채널에서 웰컴 쿠폰 및 주차별 스페셜 쿠폰이 제공될 수 있습니다."
+  ],
+  "lastUpdated": "2026-09-07",
+  "coupons": [
+    {
+      "code": "0910ECLIPSE",
+      "reward": "골드 1,000,000, 클레온의 결정 100개, 희귀 스킬 강화석 1개, 대장장이의 세공석 10개, 공예가의 세공석 10개",
+      "issuedAt": "2026-09-05",
+      "expiresAt": "2026-11-10T23:59:59+09:00",
+      "sourceUrl": "https://page.onstove.com/eclipse/kr",
+      "notes": "론칭 프리뷰 방송 기념 공식 쿠폰 (2026.09.10 12:00 정식 론칭 이후 사용 가능)"
+    }
+  ]
+}

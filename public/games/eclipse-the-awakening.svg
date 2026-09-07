@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="ec-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090A0F"/>
+      <stop offset="100%" stop-color="#18122B"/>
+    </linearGradient>
+    <linearGradient id="ec-corona" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#DC2626"/>
+    </linearGradient>
+    <radialGradient id="ec-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="40%" stop-color="#F59E0B" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background Card -->
+  <rect width="120" height="120" rx="24" fill="url(#ec-bg)"/>
+  <rect x="6" y="6" width="108" height="108" rx="18" stroke="#2E234D" stroke-width="2" stroke-dasharray="4 4"/>
+
+  <!-- Ambient Glow -->
+  <circle cx="60" cy="60" r="42" fill="url(#ec-glow)"/>
+
+  <!-- Orbit Ring -->
+  <circle cx="60" cy="60" r="38" stroke="#4C3A7A" stroke-width="1.5" stroke-dasharray="8 6" opacity="0.6"/>
+
+  <!-- Eclipse Outer Corona -->
+  <circle cx="60" cy="60" r="26" stroke="url(#ec-corona)" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="120 40"/>
+
+  <!-- Crescent Silhouette (Solar Eclipse Effect) -->
+  <circle cx="57" cy="60" r="23" fill="#F59E0B" opacity="0.9"/>
+  <circle cx="62" cy="58" r="22" fill="#0F0D1B"/>
+
+  <!-- Center Awakening Spark -->
+  <circle cx="38" cy="60" r="2.5" fill="#FEF08A"/>
+  <circle cx="60" cy="38" r="1.5" fill="#FEF08A" opacity="0.8"/>
+</svg>
