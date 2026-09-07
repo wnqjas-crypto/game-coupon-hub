@@ -1,7 +1,8 @@
 export interface DateEvaluation {
-  status: 'active' | 'expiring_today' | 'expired' | 'undetermined';
+  status: 'upcoming' | 'active' | 'expiring_today' | 'expired' | 'undetermined';
   dDayLabel: string;
   formattedExpiresAt: string;
+  formattedStartsAt?: string;
 }
 
 export function getKSTDateParts(d: Date): {
@@ -50,12 +51,60 @@ export function formatKSTDate(d: Date): string {
   return `${parts.year}.${mm}.${dd} ${hh}:${min}`;
 }
 
-export function evaluateCouponDate(expiresAt: string | null | undefined, referenceNow: Date = new Date()): DateEvaluation {
+export function evaluateCouponDate(
+  expiresAt: string | null | undefined,
+  referenceNow: Date = new Date(),
+  startsAt?: string | null | undefined
+): DateEvaluation {
+  const nowMs = referenceNow.getTime();
+
+  let formattedStartsAt: string | undefined;
+  if (startsAt) {
+    const startDate = new Date(startsAt);
+    if (!isNaN(startDate.getTime())) {
+      formattedStartsAt = formatKSTDate(startDate);
+      const startMs = startDate.getTime();
+
+      // If coupon has not started yet in KST
+      if (startMs > nowMs) {
+        const nowParts = getKSTDateParts(referenceNow);
+        const startParts = getKSTDateParts(startDate);
+
+        const nowMidnight = Date.UTC(nowParts.year, nowParts.month - 1, nowParts.day);
+        const startMidnight = Date.UTC(startParts.year, startParts.month - 1, startParts.day);
+
+        const diffStartDays = Math.round((startMidnight - nowMidnight) / (24 * 60 * 60 * 1000));
+
+        let dDayLabel = '사용 예정';
+        if (diffStartDays <= 0) {
+          dDayLabel = '오늘 사용 가능';
+        } else if (diffStartDays === 1) {
+          dDayLabel = 'D-1부터 사용 가능';
+        } else {
+          dDayLabel = `D-${diffStartDays}부터 사용 가능`;
+        }
+
+        const formattedExpiresAt = expiresAt
+          ? (isNaN(new Date(expiresAt).getTime()) ? expiresAt : formatKSTDate(new Date(expiresAt)))
+          : '만료일 미정';
+
+        return {
+          status: 'upcoming',
+          dDayLabel,
+          formattedExpiresAt,
+          formattedStartsAt,
+        };
+      }
+    }
+  }
+
+  // If startsAt <= nowMs or not specified, evaluate expiration
   if (!expiresAt) {
     return {
       status: 'undetermined',
       dDayLabel: '만료일 미정',
       formattedExpiresAt: '만료일 미정',
+      formattedStartsAt,
     };
   }
 
@@ -65,11 +114,11 @@ export function evaluateCouponDate(expiresAt: string | null | undefined, referen
       status: 'undetermined',
       dDayLabel: '만료일 미정',
       formattedExpiresAt: expiresAt,
+      formattedStartsAt,
     };
   }
 
   const formattedExpiresAt = formatKSTDate(expiryDate);
-  const nowMs = referenceNow.getTime();
   const expiryMs = expiryDate.getTime();
 
   // If exact millisecond has already passed
@@ -78,6 +127,7 @@ export function evaluateCouponDate(expiresAt: string | null | undefined, referen
       status: 'expired',
       dDayLabel: '만료',
       formattedExpiresAt,
+      formattedStartsAt,
     };
   }
 
@@ -95,6 +145,7 @@ export function evaluateCouponDate(expiresAt: string | null | undefined, referen
       status: 'expiring_today',
       dDayLabel: '오늘 만료',
       formattedExpiresAt,
+      formattedStartsAt,
     };
   }
 
@@ -103,6 +154,7 @@ export function evaluateCouponDate(expiresAt: string | null | undefined, referen
       status: 'active',
       dDayLabel: 'D-1',
       formattedExpiresAt,
+      formattedStartsAt,
     };
   }
 
@@ -110,5 +162,6 @@ export function evaluateCouponDate(expiresAt: string | null | undefined, referen
     status: 'active',
     dDayLabel: `D-${diffDays}`,
     formattedExpiresAt,
+    formattedStartsAt,
   };
 }

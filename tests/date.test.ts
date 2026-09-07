@@ -70,3 +70,88 @@ test('evaluateCouponDate: ISO 8601 +09:00 timestamp does not apply double offset
   assert.equal(utcResult.formattedExpiresAt, '2026.08.06 11:00');
   assert.equal(result.formattedExpiresAt, utcResult.formattedExpiresAt);
 });
+
+// === Requirements Case 1-8 for startsAt / upcoming ===
+
+test('case 1: startsAt missing or null maintains existing active behavior', () => {
+  const refNow = new Date('2026-09-07T12:00:00+09:00');
+  const expiresAt = '2026-09-10T12:00:00+09:00';
+
+  const resUndefined = evaluateCouponDate(expiresAt, refNow, undefined);
+  assert.equal(resUndefined.status, 'active');
+  assert.equal(resUndefined.dDayLabel, 'D-3');
+
+  const resNull = evaluateCouponDate(expiresAt, refNow, null);
+  assert.equal(resNull.status, 'active');
+  assert.equal(resNull.dDayLabel, 'D-3');
+});
+
+test('case 2: 3 days before start time -> upcoming with D-3', () => {
+  const refNow = new Date('2026-09-07T12:00:00+09:00');
+  const startsAt = '2026-09-10T12:00:00+09:00';
+  const expiresAt = '2026-11-10T23:59:59+09:00';
+
+  const res = evaluateCouponDate(expiresAt, refNow, startsAt);
+  assert.equal(res.status, 'upcoming');
+  assert.equal(res.dDayLabel, 'D-3부터 사용 가능');
+  assert.equal(res.formattedStartsAt, '2026.09.10 12:00');
+});
+
+test('case 3: 1 minute before start time -> upcoming', () => {
+  // 11:59 KST, starts at 12:00 KST same day
+  const refNow = new Date('2026-09-10T11:59:00+09:00');
+  const startsAt = '2026-09-10T12:00:00+09:00';
+  const expiresAt = '2026-11-10T23:59:59+09:00';
+
+  const res = evaluateCouponDate(expiresAt, refNow, startsAt);
+  assert.equal(res.status, 'upcoming');
+  assert.equal(res.dDayLabel, '오늘 사용 가능');
+});
+
+test('case 4: exactly reaches start time -> active', () => {
+  // Exactly 12:00:00 KST
+  const refNow = new Date('2026-09-10T12:00:00+09:00');
+  const startsAt = '2026-09-10T12:00:00+09:00';
+  const expiresAt = '2026-11-10T23:59:59+09:00';
+
+  const res = evaluateCouponDate(expiresAt, refNow, startsAt);
+  assert.equal(res.status, 'active');
+  assert.notEqual(res.status, 'upcoming');
+});
+
+test('case 5: after start time and before expiresAt -> active', () => {
+  const refNow = new Date('2026-09-15T12:00:00+09:00');
+  const startsAt = '2026-09-10T12:00:00+09:00';
+  const expiresAt = '2026-11-10T23:59:59+09:00';
+
+  const res = evaluateCouponDate(expiresAt, refNow, startsAt);
+  assert.equal(res.status, 'active');
+});
+
+test('case 6: expiration day -> expiring_today', () => {
+  const refNow = new Date('2026-11-10T10:00:00+09:00');
+  const startsAt = '2026-09-10T12:00:00+09:00';
+  const expiresAt = '2026-11-10T23:59:59+09:00';
+
+  const res = evaluateCouponDate(expiresAt, refNow, startsAt);
+  assert.equal(res.status, 'expiring_today');
+  assert.equal(res.dDayLabel, '오늘 만료');
+});
+
+test('case 7: after expiresAt -> expired', () => {
+  const refNow = new Date('2026-11-11T00:00:01+09:00');
+  const startsAt = '2026-09-10T12:00:00+09:00';
+  const expiresAt = '2026-11-10T23:59:59+09:00';
+
+  const res = evaluateCouponDate(expiresAt, refNow, startsAt);
+  assert.equal(res.status, 'expired');
+  assert.equal(res.dDayLabel, '만료');
+});
+
+test('case 8: startsAt with +09:00 offset does not apply double offset', () => {
+  const startsAt = '2026-09-10T12:00:00+09:00';
+  const refNow = new Date('2026-09-01T00:00:00Z');
+
+  const res = evaluateCouponDate('2026-11-10T23:59:59+09:00', refNow, startsAt);
+  assert.equal(res.formattedStartsAt, '2026.09.10 12:00');
+});

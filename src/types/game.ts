@@ -2,6 +2,7 @@ export interface CouponItem {
   code: string;
   reward: string;
   issuedAt?: string;
+  startsAt?: string | null;
   expiresAt: string | null;
   sourceUrl: string;
   notes?: string;
@@ -18,16 +19,19 @@ export interface GameData {
   coupons: CouponItem[];
 }
 
-export type CouponStatus = 'active' | 'expiring_today' | 'expired' | 'undetermined';
+export type CouponStatus = 'upcoming' | 'active' | 'expiring_today' | 'expired' | 'undetermined';
 
 export interface EvaluatedCoupon extends CouponItem {
   status: CouponStatus;
   dDayLabel: string;
   formattedExpiresAt: string;
+  formattedStartsAt?: string;
 }
 
 export interface EvaluatedGameData extends Omit<GameData, 'coupons'> {
+  upcomingCoupons: EvaluatedCoupon[];
   activeCoupons: EvaluatedCoupon[];
   expiredCoupons: EvaluatedCoupon[];
   activeCount: number;
+  upcomingCount: number;
 }

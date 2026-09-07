@@ -20,6 +20,10 @@
   --badge-active-bg: #ECFDF5;
   --badge-active-text: #047857;
   --badge-active-border: #A7F3D0;
+
+  --badge-upcoming-bg: #F5F3FF;
+  --badge-upcoming-text: #6D28D9;
+  --badge-upcoming-border: #DDD6FE;
   
   --badge-warning-bg: #FFFBEB;
   --badge-warning-text: #B45309;
@@ -101,6 +105,12 @@ img, svg {
   background-color: var(--badge-active-bg);
   color: var(--badge-active-text);
   border-color: var(--badge-active-border);
+}
+
+.badge-upcoming {
+  background-color: var(--badge-upcoming-bg);
+  color: var(--badge-upcoming-text);
+  border-color: var(--badge-upcoming-border);
 }
 
 .badge-warning {

@@ -28,7 +28,7 @@ test('getGameBySlug: finds eternal-return and eclipse-the-awakening, rejects fix
   assert.equal(fixture, undefined);
 });
 
-test('evaluateGame: properly partitions active and expired coupons', () => {
+test('evaluateGame: properly partitions upcoming, active, and expired coupons', () => {
   const er = getGameBySlug('eternal-return');
   assert.ok(er);
   
@@ -39,15 +39,27 @@ test('evaluateGame: properly partitions active and expired coupons', () => {
   assert.equal(evaluated.activeCoupons[0].code, 'GOS12SAILING');
   assert.equal(evaluated.expiredCoupons.length, 4);
 
+  // Case 9: On 2026-09-07, Eclipse 0910ECLIPSE starts at 2026-09-10 12:00 KST
+  // It MUST be in upcomingCoupons and EXCLUDED from activeCoupons and activeCount
   const ec = getGameBySlug('eclipse-the-awakening');
   assert.ok(ec);
-  const evaluatedEc = evaluateGame(ec, new Date('2026-09-07T12:00:00+09:00'));
-  assert.equal(evaluatedEc.activeCount, 1);
-  assert.equal(evaluatedEc.activeCoupons[0].code, '0910ECLIPSE');
+  const evaluatedEcBeforeLaunch = evaluateGame(ec, new Date('2026-09-07T12:00:00+09:00'));
+  assert.equal(evaluatedEcBeforeLaunch.activeCount, 0, 'Upcoming coupon must not be counted in activeCount');
+  assert.equal(evaluatedEcBeforeLaunch.activeCoupons.length, 0);
+  assert.equal(evaluatedEcBeforeLaunch.upcomingCount, 1);
+  assert.equal(evaluatedEcBeforeLaunch.upcomingCoupons.length, 1);
+  assert.equal(evaluatedEcBeforeLaunch.upcomingCoupons[0].code, '0910ECLIPSE');
 
-  // Test 0 active coupons state
+  // Once launch time arrives (2026-09-10 12:00:00 KST), it transitions to active
+  const evaluatedEcAtLaunch = evaluateGame(ec, new Date('2026-09-10T12:00:00+09:00'));
+  assert.equal(evaluatedEcAtLaunch.activeCount, 1);
+  assert.equal(evaluatedEcAtLaunch.activeCoupons[0].code, '0910ECLIPSE');
+  assert.equal(evaluatedEcAtLaunch.upcomingCount, 0);
+
+  // Test 0 active and 0 upcoming coupons state
   const zeroCouponGame = { ...ec, coupons: [] };
   const evaluatedZero = evaluateGame(zeroCouponGame);
   assert.equal(evaluatedZero.activeCount, 0);
+  assert.equal(evaluatedZero.upcomingCount, 0);
   assert.equal(evaluatedZero.activeCoupons.length, 0);
 });

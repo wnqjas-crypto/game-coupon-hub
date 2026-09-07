@@ -55,20 +55,24 @@ export function getGameBySlug(slug: string): GameData | undefined {
 }
 
 export function evaluateGame(game: GameData, referenceNow: Date = new Date()): EvaluatedGameData {
+  const upcomingCoupons: EvaluatedCoupon[] = [];
   const activeCoupons: EvaluatedCoupon[] = [];
   const expiredCoupons: EvaluatedCoupon[] = [];
 
   for (const coupon of game.coupons || []) {
-    const evaluation = evaluateCouponDate(coupon.expiresAt, referenceNow);
+    const evaluation = evaluateCouponDate(coupon.expiresAt, referenceNow, coupon.startsAt);
     const evaluated: EvaluatedCoupon = {
       ...coupon,
       status: evaluation.status,
       dDayLabel: evaluation.dDayLabel,
       formattedExpiresAt: evaluation.formattedExpiresAt,
+      formattedStartsAt: evaluation.formattedStartsAt,
     };
 
     if (evaluation.status === 'expired') {
       expiredCoupons.push(evaluated);
+    } else if (evaluation.status === 'upcoming') {
+      upcomingCoupons.push(evaluated);
     } else {
       activeCoupons.push(evaluated);
     }
@@ -82,9 +86,11 @@ export function evaluateGame(game: GameData, referenceNow: Date = new Date()): E
     officialUrl: game.officialUrl,
     couponGuide: game.couponGuide,
     lastUpdated: game.lastUpdated,
+    upcomingCoupons,
     activeCoupons,
     expiredCoupons,
     activeCount: activeCoupons.length,
+    upcomingCount: upcomingCoupons.length,
   };
 }
 
@@ -94,6 +100,9 @@ export function getAllEvaluatedGames(referenceNow: Date = new Date()): Evaluated
     .sort((a, b) => {
       if (b.activeCount !== a.activeCount) {
         return b.activeCount - a.activeCount;
+      }
+      if (b.upcomingCount !== a.upcomingCount) {
+        return b.upcomingCount - a.upcomingCount;
       }
       return b.lastUpdated.localeCompare(a.lastUpdated);
     });

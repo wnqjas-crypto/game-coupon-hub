@@ -9,7 +9,9 @@ interface Props {
 const { coupon, isExpired = false } = Astro.props;
 
 const badgeClass =
-  coupon.status === 'expiring_today'
+  coupon.status === 'upcoming'
+    ? 'badge-upcoming'
+    : coupon.status === 'expiring_today'
     ? 'badge-warning'
     : coupon.status === 'expired'
     ? 'badge-expired'
@@ -19,9 +21,10 @@ const badgeClass =
 ---
 
 <div
-  class={`coupon-card ${isExpired ? 'is-expired' : ''}`}
+  class={`coupon-card ${isExpired || coupon.status === 'expired' ? 'is-expired' : ''} ${coupon.status === 'upcoming' ? 'is-upcoming' : ''}`}
   data-coupon-card
   data-code={coupon.code}
+  data-starts-at={coupon.startsAt || ''}
   data-expires-at={coupon.expiresAt || ''}
   data-status={coupon.status}
 >
@@ -52,6 +55,11 @@ const badgeClass =
     </p>
 
     <div class="coupon-footer-meta">
+      {coupon.formattedStartsAt && (
+        <span class="start-text" data-start-label>
+          사용 시작: {coupon.formattedStartsAt}
+        </span>
+      )}
       <span class="expiry-text" data-expiry-label>
         만료: {coupon.formattedExpiresAt}
       </span>
@@ -87,6 +95,11 @@ const badgeClass =
 
   .coupon-card:hover {
     border-color: #CBD5E1;
+  }
+
+  .coupon-card.is-upcoming {
+    border-color: #DDD6FE;
+    background-color: #FAF5FF;
   }
 
   .coupon-card.is-expired {
@@ -125,6 +138,12 @@ const badgeClass =
     letter-spacing: 0.04em;
     user-select: all;
     border: 1px solid #BFDBFE;
+  }
+
+  .coupon-card.is-upcoming .coupon-code {
+    color: #6D28D9;
+    background-color: #EDE9FE;
+    border-color: #DDD6FE;
   }
 
   .btn-copy {
@@ -195,6 +214,11 @@ const badgeClass =
     font-size: 0.8125rem;
     color: var(--text-muted);
     flex-wrap: wrap;
+  }
+
+  .start-text {
+    color: #7C3AED;
+    font-weight: 600;
   }
 
   .source-link {

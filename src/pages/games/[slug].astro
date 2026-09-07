@@ -62,7 +62,7 @@ const couponListJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
   name: `${evaluatedGame.name} 최신 쿠폰 목록`,
-  itemListElement: evaluatedGame.activeCoupons.map((c, idx) => ({
+  itemListElement: [...evaluatedGame.activeCoupons, ...evaluatedGame.upcomingCoupons].map((c, idx) => ({
     '@type': 'ListItem',
     position: idx + 1,
     name: `${c.code} - ${c.reward}`,
@@ -111,10 +111,14 @@ const couponListJsonLd = {
               <p class="game-official-name">{evaluatedGame.officialName}</p>
               <div class="badges-row">
                 <span
-                  class={`badge ${evaluatedGame.activeCount > 0 ? 'badge-active' : 'badge-expired'}`}
+                  class={`badge ${evaluatedGame.activeCount > 0 ? 'badge-active' : evaluatedGame.upcomingCount > 0 ? 'badge-upcoming' : 'badge-expired'}`}
                   id="header-active-badge"
                 >
-                  {evaluatedGame.activeCount > 0 ? `사용 가능 ${evaluatedGame.activeCount}개` : '진행중 쿠폰 없음'}
+                  {evaluatedGame.activeCount > 0
+                    ? `사용 가능 ${evaluatedGame.activeCount}개`
+                    : evaluatedGame.upcomingCount > 0
+                    ? `사용 예정 ${evaluatedGame.upcomingCount}개`
+                    : '진행중 쿠폰 없음'}
                 </span>
                 <span class="badge badge-neutral">마지막 확인: {evaluatedGame.lastUpdated}</span>
               </div>
@@ -153,13 +157,39 @@ const couponListJsonLd = {
           {evaluatedGame.activeCoupons.length === 0 && (
             <div id="empty-active-state" class="empty-state">
               <div class="empty-icon">📢</div>
-              <h3 class="empty-title">현재 진행 중인 공식 쿠폰이 없습니다</h3>
+              <h3 class="empty-title">
+                {evaluatedGame.upcomingCount > 0
+                  ? '현재 사용 가능한 쿠폰은 없으며, 사용 예정 쿠폰이 있습니다'
+                  : '현재 진행 중인 공식 쿠폰이 없습니다'}
+              </h3>
               <p class="empty-desc">
-                새로운 공식 쿠폰이 발표되는 즉시 가장 빠르게 업데이트됩니다.<br />
-                이전에 발행된 쿠폰 목록은 아래 만료 쿠폰 섹션을 확인해주세요.
+                {evaluatedGame.upcomingCount > 0
+                  ? '아래 사용 예정 쿠폰 목록에서 시작 시각과 보상을 확인하실 수 있습니다.'
+                  : '새로운 공식 쿠폰이 발표되는 즉시 가장 빠르게 업데이트됩니다.<br />이전에 발행된 쿠폰 목록은 아래 만료 쿠폰 섹션을 확인해주세요.'}
               </p>
             </div>
           )}
+        </section>
+
+        <!-- Upcoming Coupons Section -->
+        <section
+          class="coupons-section upcoming-section"
+          id="upcoming-section"
+          aria-labelledby="upcoming-coupons-title"
+          style={evaluatedGame.upcomingCount === 0 ? 'display: none;' : ''}
+        >
+          <div class="section-title-wrap">
+            <h2 id="upcoming-coupons-title" class="section-heading">
+              사용 예정 쿠폰 (<span id="upcoming-count-num">{evaluatedGame.upcomingCount}</span>)
+            </h2>
+            <span class="section-tip">사용 시작 시각 이후 등록 가능합니다</span>
+          </div>
+
+          <div class="coupons-grid" id="upcoming-coupons-container">
+            {evaluatedGame.upcomingCoupons.map((coupon) => (
+              <CouponCard coupon={coupon} />
+            ))}
+          </div>
         </section>
 
         <!-- Coupon Guide Section -->
@@ -178,7 +208,7 @@ const couponListJsonLd = {
 
         <!-- Expired Coupons Section -->
         <section class="expired-section" aria-labelledby="expired-coupons-title">
-          <details class="expired-details" open={evaluatedGame.activeCoupons.length === 0}>
+          <details class="expired-details" open={evaluatedGame.activeCoupons.length === 0 && evaluatedGame.upcomingCount === 0}>
             <summary class="expired-summary">
               <span class="expired-summary-title">
                 만료된 쿠폰 (<span id="expired-count-num">{evaluatedGame.expiredCoupons.length}</span>)
@@ -247,9 +277,11 @@ const couponListJsonLd = {
         // 2. Real-time KST evaluation on page load (prevents stale SSG D-Day / expiration status)
         function reclassifyCoupons() {
           const activeContainer = document.getElementById('active-coupons-container');
+          const upcomingContainer = document.getElementById('upcoming-coupons-container');
           const expiredContainer = document.getElementById('expired-coupons-container');
-          const emptyState = document.getElementById('empty-active-state');
+          const upcomingSection = document.getElementById('upcoming-section');
           const activeCountNum = document.getElementById('active-count-num');
+          const upcomingCountNum = document.getElementById('upcoming-count-num');
           const expiredCountNum = document.getElementById('expired-count-num');
           const headerBadge = document.getElementById('header-active-badge');
 
@@ -279,37 +311,57 @@ const couponListJsonLd = {
           const nowMs = now.getTime();
 
           let activeTotal = 0;
+          let upcomingTotal = 0;
           let expiredTotal = 0;
 
           cards.forEach(function(card) {
+            const startsAt = card.getAttribute('data-starts-at');
             const expiresAt = card.getAttribute('data-expires-at');
             const badge = card.querySelector('[data-badge]');
 
-            if (!expiresAt) {
-              activeTotal++;
+            const startDate = startsAt ? new Date(startsAt) : null;
+            const startMs = startDate && !isNaN(startDate.getTime()) ? startDate.getTime() : null;
+
+            const expiryDate = expiresAt ? new Date(expiresAt) : null;
+            const expiryMs = expiryDate && !isNaN(expiryDate.getTime()) ? expiryDate.getTime() : null;
+
+            // 1. Check if upcoming
+            if (startMs !== null && startMs > nowMs) {
+              upcomingTotal++;
+              card.classList.remove('is-expired');
+              card.classList.add('is-upcoming');
+              card.setAttribute('data-status', 'upcoming');
+
+              const startParts = formatter.formatToParts(startDate);
+              const startMap = {};
+              startParts.forEach(function(p) {
+                if (p.type !== 'literal') startMap[p.type] = parseInt(p.value, 10);
+              });
+              const startKSTMidnight = Date.UTC(startMap.year, startMap.month - 1, startMap.day);
+              const diffStartDays = Math.round((startKSTMidnight - currentKSTMidnight) / (24 * 60 * 60 * 1000));
+
+              if (badge) {
+                badge.className = 'badge badge-upcoming';
+                if (diffStartDays <= 0) {
+                  badge.textContent = '오늘 사용 가능';
+                } else if (diffStartDays === 1) {
+                  badge.textContent = 'D-1부터 사용 가능';
+                } else {
+                  badge.textContent = 'D-' + diffStartDays + '부터 사용 가능';
+                }
+              }
+
+              if (upcomingContainer && card.parentElement !== upcomingContainer) {
+                upcomingContainer.appendChild(card);
+              }
               return;
             }
 
-            const expiryDate = new Date(expiresAt);
-            if (isNaN(expiryDate.getTime())) {
-              activeTotal++;
-              return;
-            }
-
-            const expParts = formatter.formatToParts(expiryDate);
-            const expMap = {};
-            expParts.forEach(function(p) {
-              if (p.type !== 'literal') expMap[p.type] = parseInt(p.value, 10);
-            });
-            const expKSTMidnight = Date.UTC(expMap.year, expMap.month - 1, expMap.day);
-            const expiryMs = expiryDate.getTime();
-
-            const isExpired = expiryMs <= nowMs;
-            const diffDays = Math.round((expKSTMidnight - currentKSTMidnight) / (24 * 60 * 60 * 1000));
-
-            if (isExpired) {
+            // 2. Check if expired
+            if (expiryMs !== null && expiryMs <= nowMs) {
               expiredTotal++;
               card.classList.add('is-expired');
+              card.classList.remove('is-upcoming');
               card.setAttribute('data-status', 'expired');
               if (badge) {
                 badge.textContent = '만료';
@@ -318,9 +370,23 @@ const couponListJsonLd = {
               if (card.parentElement !== expiredContainer) {
                 expiredContainer.prepend(card);
               }
-            } else {
-              activeTotal++;
-              card.classList.remove('is-expired');
+              return;
+            }
+
+            // 3. Otherwise Active
+            activeTotal++;
+            card.classList.remove('is-expired');
+            card.classList.remove('is-upcoming');
+
+            if (expiryDate && expiryMs !== null) {
+              const expParts = formatter.formatToParts(expiryDate);
+              const expMap = {};
+              expParts.forEach(function(p) {
+                if (p.type !== 'literal') expMap[p.type] = parseInt(p.value, 10);
+              });
+              const expKSTMidnight = Date.UTC(expMap.year, expMap.month - 1, expMap.day);
+              const diffDays = Math.round((expKSTMidnight - currentKSTMidnight) / (24 * 60 * 60 * 1000));
+
               if (diffDays <= 0) {
                 card.setAttribute('data-status', 'expiring_today');
                 if (badge) {
@@ -334,20 +400,35 @@ const couponListJsonLd = {
                   badge.className = 'badge badge-active';
                 }
               }
-              if (card.parentElement !== activeContainer) {
-                activeContainer.appendChild(card);
+            } else {
+              card.setAttribute('data-status', 'undetermined');
+              if (badge) {
+                badge.textContent = '만료일 미정';
+                badge.className = 'badge badge-neutral';
               }
+            }
+
+            if (card.parentElement !== activeContainer) {
+              activeContainer.appendChild(card);
             }
           });
 
           // Update counts
           if (activeCountNum) activeCountNum.textContent = activeTotal;
+          if (upcomingCountNum) upcomingCountNum.textContent = upcomingTotal;
           if (expiredCountNum) expiredCountNum.textContent = expiredTotal;
+
+          if (upcomingSection) {
+            upcomingSection.style.display = upcomingTotal > 0 ? '' : 'none';
+          }
 
           if (headerBadge) {
             if (activeTotal > 0) {
               headerBadge.textContent = '사용 가능 ' + activeTotal + '개';
               headerBadge.className = 'badge badge-active';
+            } else if (upcomingTotal > 0) {
+              headerBadge.textContent = '사용 예정 ' + upcomingTotal + '개';
+              headerBadge.className = 'badge badge-upcoming';
             } else {
               headerBadge.textContent = '진행중 쿠폰 없음';
               headerBadge.className = 'badge badge-expired';
@@ -361,9 +442,15 @@ const couponListJsonLd = {
               emptyState = document.createElement('div');
               emptyState.id = 'empty-active-state';
               emptyState.className = 'empty-state';
-              emptyState.innerHTML = '<div class="empty-icon">📢</div><h3 class="empty-title">현재 진행 중인 공식 쿠폰이 없습니다</h3><p class="empty-desc">새로운 공식 쿠폰이 발표되는 즉시 가장 빠르게 업데이트됩니다.<br />이전에 발행된 쿠폰 목록은 아래 만료 쿠폰 섹션을 확인해주세요.</p>';
               activeContainer.parentNode.insertBefore(emptyState, activeContainer.nextSibling);
             }
+            const title = upcomingTotal > 0
+              ? '현재 사용 가능한 쿠폰은 없으며, 사용 예정 쿠폰이 있습니다'
+              : '현재 진행 중인 공식 쿠폰이 없습니다';
+            const desc = upcomingTotal > 0
+              ? '아래 사용 예정 쿠폰 목록에서 시작 시각과 보상을 확인하실 수 있습니다.'
+              : '새로운 공식 쿠폰이 발표되는 즉시 가장 빠르게 업데이트됩니다.<br />이전에 발행된 쿠폰 목록은 아래 만료 쿠폰 섹션을 확인해주세요.';
+            emptyState.innerHTML = '<div class="empty-icon">📢</div><h3 class="empty-title">' + title + '</h3><p class="empty-desc">' + desc + '</p>';
             emptyState.style.display = 'block';
           } else {
             if (emptyState) {
@@ -564,8 +651,6 @@ const couponListJsonLd = {
     line-height: 1.6;
     color: var(--text-secondary);
   }
-
-
 
   .expired-section {
     margin-top: 24px;

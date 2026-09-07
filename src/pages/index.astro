@@ -110,36 +110,55 @@ const itemListJsonLd = {
           const now = Date.now();
 
           cards.forEach(function(card) {
-            const rawExpiries = card.getAttribute('data-coupon-expiries');
-            if (!rawExpiries) return;
+            const rawSchedules = card.getAttribute('data-coupon-schedules');
+            let schedules = [];
 
-            try {
-              const expiries = JSON.parse(rawExpiries);
-              let activeCount = 0;
-
-              expiries.forEach(function(exp) {
-                if (!exp) {
-                  activeCount++;
-                  return;
-                }
-                const expiryTime = new Date(exp).getTime();
-                if (!isNaN(expiryTime) && expiryTime > now) {
-                  activeCount++;
-                }
-              });
-
-              const badge = card.querySelector('[data-active-badge]');
-              if (badge) {
-                if (activeCount > 0) {
-                  badge.textContent = '사용 가능 ' + activeCount + '개';
-                  badge.className = 'badge badge-active';
-                } else {
-                  badge.textContent = '진행중 쿠폰 없음';
-                  badge.className = 'badge badge-expired';
-                }
+            if (rawSchedules) {
+              try {
+                schedules = JSON.parse(rawSchedules);
+              } catch (e) {}
+            } else {
+              const rawExpiries = card.getAttribute('data-coupon-expiries');
+              if (rawExpiries) {
+                try {
+                  const expList = JSON.parse(rawExpiries);
+                  schedules = expList.map(function(exp) { return { startsAt: null, expiresAt: exp }; });
+                } catch (e) {}
               }
-            } catch (err) {
-              console.error('Error reclassifying game card:', err);
+            }
+
+            let activeCount = 0;
+            let upcomingCount = 0;
+
+            schedules.forEach(function(item) {
+              const startsAt = item.startsAt;
+              const expiresAt = item.expiresAt;
+
+              const startTime = startsAt ? new Date(startsAt).getTime() : NaN;
+              const expiryTime = expiresAt ? new Date(expiresAt).getTime() : NaN;
+
+              if (!isNaN(startTime) && startTime > now) {
+                upcomingCount++;
+                return;
+              }
+
+              if (isNaN(expiryTime) || expiryTime > now) {
+                activeCount++;
+              }
+            });
+
+            const badge = card.querySelector('[data-active-badge]');
+            if (badge) {
+              if (activeCount > 0) {
+                badge.textContent = '사용 가능 ' + activeCount + '개';
+                badge.className = 'badge badge-active';
+              } else if (upcomingCount > 0) {
+                badge.textContent = '사용 예정 ' + upcomingCount + '개';
+                badge.className = 'badge badge-upcoming';
+              } else {
+                badge.textContent = '진행중 쿠폰 없음';
+                badge.className = 'badge badge-expired';
+              }
             }
           });
         }

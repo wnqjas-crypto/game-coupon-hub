@@ -6,7 +6,14 @@ interface Props {
 }
 
 const { game } = Astro.props;
-const couponExpiries = [...game.activeCoupons, ...game.expiredCoupons].map((c) => c.expiresAt);
+const couponSchedules = [
+  ...(game.upcomingCoupons || []),
+  ...game.activeCoupons,
+  ...game.expiredCoupons
+].map((c) => ({
+  startsAt: c.startsAt || null,
+  expiresAt: c.expiresAt || null,
+}));
 ---
 
 <article
@@ -15,7 +22,8 @@ const couponExpiries = [...game.activeCoupons, ...game.expiredCoupons].map((c) =
   data-game-name={game.name.toLowerCase()}
   data-official-name={game.officialName.toLowerCase()}
   data-slug={game.slug}
-  data-coupon-expiries={JSON.stringify(couponExpiries)}
+  data-coupon-schedules={JSON.stringify(couponSchedules)}
+  data-coupon-expiries={JSON.stringify(couponSchedules.map(c => c.expiresAt))}
 >
   <a href={`/games/${game.slug}`} class="game-card-link" aria-label={`${game.name} 쿠폰 목록 보기`}>
     <div class="game-icon-wrap">
@@ -32,8 +40,15 @@ const couponExpiries = [...game.activeCoupons, ...game.expiredCoupons].map((c) =
     <div class="game-info">
       <div class="title-row">
         <h2 class="game-name">{game.name}</h2>
-        <span class={`badge ${game.activeCount > 0 ? 'badge-active' : 'badge-expired'}`} data-active-badge>
-          {game.activeCount > 0 ? `사용 가능 ${game.activeCount}개` : '진행중 쿠폰 없음'}
+        <span
+          class={`badge ${game.activeCount > 0 ? 'badge-active' : game.upcomingCount > 0 ? 'badge-upcoming' : 'badge-expired'}`}
+          data-active-badge
+        >
+          {game.activeCount > 0
+            ? `사용 가능 ${game.activeCount}개`
+            : game.upcomingCount > 0
+            ? `사용 예정 ${game.upcomingCount}개`
+            : '진행중 쿠폰 없음'}
         </span>
       </div>
       <p class="official-name">{game.officialName}</p>
